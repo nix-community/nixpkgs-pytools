@@ -36,10 +36,9 @@ script is overly verbose so that you don't have to remember the name
 of attributes. Delete the ones that you don't need.
 
 ```
-python/needs-license.py <nixpkgs-archive-url>
+python/python-modules.sh <path-to-nixpkgs>
 ```
 
-Lists all python packages that do not have a license. Checks PyPi if a
-license is provided for that package.
+List all packages that are still in `pkgs/top-level/python-packages.nix`.
 
 

@@ -27,7 +27,7 @@ List are packages that have given meta attribute
 ## python
 
 ```
-python/package-init.py <pypi-name> [--version <pypi-version>]
+python/python-package-init.py <pypi-name> [--version <pypi-version>]
 ```
 
 Creates a `default.nix` derivation to go into

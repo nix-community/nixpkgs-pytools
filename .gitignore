@@ -1,0 +1,6 @@
+# nix
+default.nix
+result
+
+# python
+__pycache__

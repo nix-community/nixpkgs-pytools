@@ -26,7 +26,8 @@ def main():
     data = download_package_json(args.package)
     metadata = package_json_to_metadata(data, args.package, args.version)
 
-    with open('default.nix', 'x') as f:
+    os.mkdir(args.package)
+    with open(os.path.join(args.package, 'default.nix'), 'x') as f:
         f.write(metadata_to_nix(metadata))
 
 
@@ -54,6 +55,7 @@ def python_to_nix_license(license):
         'GPLv2': 'gpl2',
         'GPLv3': 'gpl3',
         'LGPLv2.1 or later': 'lgpl21Plus',
+        'MPL 2.0': 'mpl20',
         'PSF License': 'psfl',
         'PSF': 'psfl',
         'Python Software Foundation License': 'psfl',
@@ -143,7 +145,6 @@ def determine_package_dependencies(package_json, url):
     # initially use requires_dist
     if package_json['info']['requires_dist']:
         extraInputs = []
-        conditionInputs = []
         propagatedBuildInputs = []
         for package in package_json['info']['requires_dist']:
             if re.search('extra\s*==\s*', package):
@@ -218,12 +219,18 @@ buildPythonPackage rec {
   # # sed -i "s/<package>.../<package>/"
   {% for condition in metadata.packageConditions %}# {{ condition }}
   {% endfor %}{% endif %}{% if metadata.extraInputs %}
-  # # Extra packages (may not be necissary)
+  # # Extra packages (may not be necessary)
   {% for p in metadata.extraInputs %}# {{ p }}
   {% endfor %}{% endif %}
+  {%- if metadata.buildInputs -%}
   buildInputs = [{% for p in metadata.buildInputs %} {{ p }}{% endfor %} ];
+  {% endif %}
+  {%- if metadata.checkInputs -%}
   checkInputs = [{% for p in metadata.checkInputs %} {{ p }}{% endfor %} ];
+  {% endif %}
+  {%- if metadata.propagatedBuildInputs -%}
   propagatedBuildInputs = [{% for p in metadata.propagatedBuildInputs %} {{ p }}{% endfor %} ];
+  {% endif %}
 
   meta = with pkgs.lib; {
     description = "{{ metadata.description }}";

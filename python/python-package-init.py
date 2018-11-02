@@ -20,14 +20,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('package', help="pypi package name")
     parser.add_argument('--version', help="pypi package version (stable if not specified)")
+    parser.add_argument('--filename', default='default.nix', help="filename for nix derivation")
     args = parser.parse_args()
     print(args.package, args.version)
 
     data = download_package_json(args.package)
     metadata = package_json_to_metadata(data, args.package, args.version)
 
-    os.mkdir(args.package)
-    with open(os.path.join(args.package, 'default.nix'), 'x') as f:
+    directory = os.path.dirname(args.filename)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    with open(args.filename, 'x') as f:
         f.write(metadata_to_nix(metadata))
 
 

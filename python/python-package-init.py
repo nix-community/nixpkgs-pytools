@@ -90,7 +90,8 @@ def package_json_to_metadata(package_json, package_name, package_version):
         raise ValueError('no source distribution found for %s:%s' % (package_name, package_version))
 
     metadata = {
-        'name': package_json['info']['name'],
+        'pname': normalize_name(package_json['info']['name']),
+        'downloadname': package_json['info']['name'],
         'version': package_version,
         'python_version': package_json['info']['requires_python'],
         'sha256': package_release_json['digests']['sha256'],
@@ -104,6 +105,11 @@ def package_json_to_metadata(package_json, package_name, package_version):
     return metadata
 
 
+def normalize_name(name: str ) -> str:
+    """Normalize a package name."""
+    return name.replace(".", "-").replace("_", "-").lower()
+
+
 def sanitize_dependencies(packages):
     def sanitize_dependency(package):
         has_condition = None
@@ -112,7 +118,7 @@ def sanitize_dependencies(packages):
         if match:
             has_condition = True
 
-        match = re.search('^([A-Za-z][A-Za-z\-_0-9]+)', package.replace('.', '-'))
+        match = re.search('^([A-Za-z][A-Za-z\-_0-9]+)', normalize_name(package))
         return match.group(1), has_condition
 
     packageConditions = []
@@ -211,13 +217,18 @@ def metadata_to_nix(metadata):
         {% endfor %}}:
 
         buildPythonPackage rec {
-          pname = "{{ metadata.name }}";
+          pname = "{{ metadata.pname }}";
           version = "{{ metadata.version }}";
         {% if metadata.python_version %}
           disabled = ; # requires python version {{ metadata.python_version }}
         {% endif %}
           src = fetchPypi {
+        {%- if metadata.pname != metadata.downloadname %}
+            pname = "{{ metadata.downloadname }}";
+            inherit version;
+        {%- else %}
             inherit pname version;
+        {%- endif %}
             sha256 = "{{ metadata["sha256"] }}";
           };
         {% if metadata.packageConditions %}

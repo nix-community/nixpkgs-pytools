@@ -1,6 +1,7 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i python3 -p python3 python36Packages.jinja2 python36Packages.setuptools
+#! nix-shell -i python3 -p python37 python37Packages.jinja2 python37Packages.setuptools
 
+import collections
 import urllib.request
 import json
 import argparse
@@ -14,7 +15,13 @@ from distutils.dir_util import copy_tree
 import tempfile
 import textwrap
 
+from typing import Dict, List, Tuple
+
 import jinja2
+
+UNSUPPORTED_CPYTHON = ["2.6", "3.0", "3.1", "3.2", "3.3", "3.4"]
+
+PythonVersionConstraint = collections.namedtuple("PythonVersionConstraint", ["constraint", "parsed", "function", "text", "supported"])
 
 
 def main():
@@ -89,16 +96,20 @@ def package_json_to_metadata(package_json, package_name, package_version):
     else:
         raise ValueError('no source distribution found for %s:%s' % (package_name, package_version))
 
+    python_version_constraints = resolve_python_version(package_json['info']['requires_python'])
+
     metadata = {
         'pname': normalize_name(package_json['info']['name']),
         'downloadname': package_json['info']['name'],
         'version': package_version,
         'python_version': package_json['info']['requires_python'],
+        'python_version_resolved': python_version_constraints[1],
         'sha256': package_release_json['digests']['sha256'],
         'url': package_release_json['url'],
         'description': package_json['info']['summary'],
         'homepage': package_json['info']['home_page'],
         'license': python_to_nix_license(package_json['info']['license']),
+        'constraintInputs': python_version_constraints[0],
     }
 
     metadata.update(determine_package_dependencies(package_json, metadata['url']))
@@ -108,6 +119,87 @@ def package_json_to_metadata(package_json, package_name, package_version):
 def normalize_name(name: str ) -> str:
     """Normalize a package name."""
     return name.replace(".", "-").replace("_", "-").lower()
+
+
+def _parse_python_version_constraint(constraint) -> PythonVersionConstraint:
+    """Parse a Python version constraint."""
+
+    def parse(constraint: str) -> Dict:
+        """Return a mapping indicate operator and version."""
+        regex = "(!)?([><=]{1,2})([\d])(?:.([\d]))?(?:.([\d\*]))?"
+        attributes = ["negated", "operator", "major", "minor", "patch"]
+        matches = re.match(regex, constraint)
+        if matches:
+            parsed_constraint = dict(zip(attributes, matches.groups()))
+            parsed_constraint["negated"] = bool(parsed_constraint["negated"])
+            parsed_constraint.pop("patch", None)  # Not interested in
+            return parsed_constraint
+        else:
+            raise ValueError("Constraint {} cannot be parsed.".format(constraint))
+
+    def nix_function_and_string(constraint) -> str:
+        """Nix function that need to be passed in."""
+        offset = 0
+
+        if constraint["operator"] == "=":
+            function = "isPy{}{}".format(constraint["major"], constraint.get("minor", "k"))
+            text = function
+        else:
+            if constraint["operator"] == ">":
+                function = "pythonAtLeast"
+                offset = +1
+            elif constraint["operator"] == "<":
+                function = "pythonOlder"
+                offset = -1
+            elif constraint["operator"] == ">=":
+                function = "pythonAtLeast"
+            elif constraint["operator"] == "<=":
+                function = "pythonOlder"
+            text = '({} "{}.{}")'.format(function, constraint["major"], int(constraint["minor"]) + offset)
+
+        # Apply negation when appliceable
+        if constraint["negated"]:
+            text = "(!{})".format(text)
+
+        return function, text
+
+    parsed_constraint = parse(constraint)
+    function, text = nix_function_and_string(parsed_constraint)
+
+    supported = "{}.{}".format(parsed_constraint["major"], parsed_constraint["minor"]) not in UNSUPPORTED_CPYTHON
+
+    return PythonVersionConstraint(
+        constraint,
+        parsed_constraint,
+        function,
+        text,
+        supported,
+    )
+
+
+def resolve_python_version(constraints: str) -> Tuple[List[str], str]:
+    """Convert Python constraints to the Nix expressions.
+
+    Args:
+        constraints: `python_version` constraints.
+
+    Returns:
+        Tuple where the first item is a list of Nix functions needed,
+        and the second a constraint string in Nix.
+    """
+
+    # Requirement strings
+    requirements = map(lambda req: req.strip(), constraints.split(","))
+    # Instances of PythonVersionConstraint
+    requirements = map(_parse_python_version_constraint, requirements)
+    # Don't bother with constraints that include unsupported Python versions.
+    requirements = list(filter(lambda req: req.supported, requirements))
+
+    functions = sorted(list(set(req.function for req in requirements)))
+    strings = sorted(list(set(req.text for req in requirements)))
+    text = " && ".join(strings)
+
+    return functions, text
 
 
 def sanitize_dependencies(packages):
@@ -213,14 +305,14 @@ def metadata_to_nix(metadata):
         { lib
         , buildPythonPackage
         , fetchPypi
-        {% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs) %}, {{ p }}
+        {% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs + metadata.constraintInputs) %}, {{ p }}
         {% endfor %}}:
 
         buildPythonPackage rec {
           pname = "{{ metadata.pname }}";
           version = "{{ metadata.version }}";
-        {% if metadata.python_version %}
-          disabled = ; # requires python version {{ metadata.python_version }}
+        {% if metadata.python_version_resolved %}
+          disabled = !{{ metadata.python_version_resolved }}; # requires python version {{ metadata.python_version }}
         {% endif %}
           src = fetchPypi {
         {%- if metadata.pname != metadata.downloadname %}

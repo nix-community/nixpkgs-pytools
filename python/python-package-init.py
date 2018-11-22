@@ -12,6 +12,7 @@ from unittest import mock
 import setuptools
 from distutils.dir_util import copy_tree
 import tempfile
+import textwrap
 
 import jinja2
 
@@ -200,49 +201,63 @@ def determine_dependencies_from_package(url):
 
 
 def metadata_to_nix(metadata):
-    template = jinja2.Template('''{ pkgs
-, buildPythonPackage
-, fetchPypi
-{% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs) %}, {{ p }}
-{% endfor %}}:
+    template = jinja2.Template(textwrap.dedent('''\
+        { lib
+        , buildPythonPackage
+        , fetchPypi
+        {% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs) %}, {{ p }}
+        {% endfor %}}:
 
-buildPythonPackage rec {
-  pname = "{{ metadata.name }}";
-  version = "{{ metadata.version }}";
-  {% if metadata.python_version %}
-  disabled = ; # requires python version {{ metadata.python_version }}
-  {% endif %}
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "{{ metadata["sha256"] }}";
-  };
-  {% if metadata.packageConditions %}
-  # # Package conditions to handle
-  # # might have to sed setup.py and egg.info in patchPhase
-  # # sed -i "s/<package>.../<package>/"
-  {% for condition in metadata.packageConditions %}# {{ condition }}
-  {% endfor %}{% endif %}{% if metadata.extraInputs %}
-  # # Extra packages (may not be necessary)
-  {% for p in metadata.extraInputs %}# {{ p }}
-  {% endfor %}{% endif %}
-  {%- if metadata.buildInputs -%}
-  buildInputs = [{% for p in metadata.buildInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-  {%- if metadata.checkInputs -%}
-  checkInputs = [{% for p in metadata.checkInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-  {%- if metadata.propagatedBuildInputs -%}
-  propagatedBuildInputs = [{% for p in metadata.propagatedBuildInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-
-  meta = with pkgs.lib; {
-    description = "{{ metadata.description }}";
-    homepage = {{ metadata.homepage }};
-    license = licenses.{{ metadata.license }};
-    # maintainers = [ maintainers. ];
-  };
-}
-''')
+        buildPythonPackage rec {
+          pname = "{{ metadata.name }}";
+          version = "{{ metadata.version }}";
+        {% if metadata.python_version %}
+          disabled = ; # requires python version {{ metadata.python_version }}
+        {% endif %}
+          src = fetchPypi {
+            inherit pname version;
+            sha256 = "{{ metadata["sha256"] }}";
+          };
+        {% if metadata.packageConditions %}
+          # # Package conditions to handle
+          # # might have to sed setup.py and egg.info in patchPhase
+          # # sed -i "s/<package>.../<package>/"
+        {%- for condition in metadata.packageConditions %}
+          # {{ condition -}}
+        {% endfor %}{% endif %}{% if metadata.extraInputs %}
+          # # Extra packages (may not be necessary)
+        {%- for p in metadata.extraInputs %}
+          # {{ p -}}
+        {% endfor %}{% endif %}
+        {%- if metadata.buildInputs %}
+          buildInputs = [
+        {%- for p in metadata.buildInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+        {%- if metadata.checkInputs %}
+          checkInputs = [
+        {%- for p in metadata.checkInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+        {%- if metadata.propagatedBuildInputs %}
+          propagatedBuildInputs = [
+        {%- for p in metadata.propagatedBuildInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+          meta = with lib; {
+            description = "{{ metadata.description }}";
+            homepage = {{ metadata.homepage }};
+            license = licenses.{{ metadata.license }};
+            # maintainers = [ maintainers. ];
+          };
+        }
+    '''))
     return template.render(metadata=metadata)
 
 

@@ -22,6 +22,7 @@ def main():
     parser.add_argument('package', help="pypi package name")
     parser.add_argument('--version', help="pypi package version (stable if not specified)")
     parser.add_argument('--filename', default='default.nix', help="filename for nix derivation")
+    parser.add_argument('-f', '--force', action="store_true", help="Force creation of file, overwriting when it already exists")
     args = parser.parse_args()
     print(args.package, args.version)
 
@@ -31,7 +32,8 @@ def main():
     directory = os.path.dirname(args.filename)
     if directory:
         os.makedirs(directory, exist_ok=True)
-    with open(args.filename, 'x') as f:
+    mode = "w" if args.force else "x"
+    with open(args.filename, mode) as f:
         f.write(metadata_to_nix(metadata))
 
 

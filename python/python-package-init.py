@@ -12,6 +12,7 @@ from unittest import mock
 import setuptools
 from distutils.dir_util import copy_tree
 import tempfile
+import textwrap
 
 import jinja2
 
@@ -21,6 +22,7 @@ def main():
     parser.add_argument('package', help="pypi package name")
     parser.add_argument('--version', help="pypi package version (stable if not specified)")
     parser.add_argument('--filename', default='default.nix', help="filename for nix derivation")
+    parser.add_argument('-f', '--force', action="store_true", help="Force creation of file, overwriting when it already exists")
     args = parser.parse_args()
     print(args.package, args.version)
 
@@ -30,7 +32,8 @@ def main():
     directory = os.path.dirname(args.filename)
     if directory:
         os.makedirs(directory, exist_ok=True)
-    with open(args.filename, 'x') as f:
+    mode = "w" if args.force else "x"
+    with open(args.filename, mode) as f:
         f.write(metadata_to_nix(metadata))
 
 
@@ -87,7 +90,8 @@ def package_json_to_metadata(package_json, package_name, package_version):
         raise ValueError('no source distribution found for %s:%s' % (package_name, package_version))
 
     metadata = {
-        'name': package_json['info']['name'],
+        'pname': normalize_name(package_json['info']['name']),
+        'downloadname': package_json['info']['name'],
         'version': package_version,
         'python_version': package_json['info']['requires_python'],
         'sha256': package_release_json['digests']['sha256'],
@@ -101,6 +105,11 @@ def package_json_to_metadata(package_json, package_name, package_version):
     return metadata
 
 
+def normalize_name(name: str ) -> str:
+    """Normalize a package name."""
+    return name.replace(".", "-").replace("_", "-").lower()
+
+
 def sanitize_dependencies(packages):
     def sanitize_dependency(package):
         has_condition = None
@@ -109,7 +118,7 @@ def sanitize_dependencies(packages):
         if match:
             has_condition = True
 
-        match = re.search('^([A-Za-z][A-Za-z\-_0-9]+)', package.replace('.', '-'))
+        match = re.search('^([A-Za-z][A-Za-z\-_0-9]+)', normalize_name(package))
         return match.group(1), has_condition
 
     packageConditions = []
@@ -200,49 +209,68 @@ def determine_dependencies_from_package(url):
 
 
 def metadata_to_nix(metadata):
-    template = jinja2.Template('''{ pkgs
-, buildPythonPackage
-, fetchPypi
-{% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs) %}, {{ p }}
-{% endfor %}}:
+    template = jinja2.Template(textwrap.dedent('''\
+        { lib
+        , buildPythonPackage
+        , fetchPypi
+        {% for p in (metadata.buildInputs + metadata.checkInputs + metadata.propagatedBuildInputs) %}, {{ p }}
+        {% endfor %}}:
 
-buildPythonPackage rec {
-  pname = "{{ metadata.name }}";
-  version = "{{ metadata.version }}";
-  {% if metadata.python_version %}
-  disabled = ; # requires python version {{ metadata.python_version }}
-  {% endif %}
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "{{ metadata["sha256"] }}";
-  };
-  {% if metadata.packageConditions %}
-  # # Package conditions to handle
-  # # might have to sed setup.py and egg.info in patchPhase
-  # # sed -i "s/<package>.../<package>/"
-  {% for condition in metadata.packageConditions %}# {{ condition }}
-  {% endfor %}{% endif %}{% if metadata.extraInputs %}
-  # # Extra packages (may not be necessary)
-  {% for p in metadata.extraInputs %}# {{ p }}
-  {% endfor %}{% endif %}
-  {%- if metadata.buildInputs -%}
-  buildInputs = [{% for p in metadata.buildInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-  {%- if metadata.checkInputs -%}
-  checkInputs = [{% for p in metadata.checkInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-  {%- if metadata.propagatedBuildInputs -%}
-  propagatedBuildInputs = [{% for p in metadata.propagatedBuildInputs %} {{ p }}{% endfor %} ];
-  {% endif %}
-
-  meta = with pkgs.lib; {
-    description = "{{ metadata.description }}";
-    homepage = {{ metadata.homepage }};
-    license = licenses.{{ metadata.license }};
-    # maintainers = [ maintainers. ];
-  };
-}
-''')
+        buildPythonPackage rec {
+          pname = "{{ metadata.pname }}";
+          version = "{{ metadata.version }}";
+        {% if metadata.python_version %}
+          disabled = ; # requires python version {{ metadata.python_version }}
+        {% endif %}
+          src = fetchPypi {
+        {%- if metadata.pname != metadata.downloadname %}
+            pname = "{{ metadata.downloadname }}";
+            inherit version;
+        {%- else %}
+            inherit pname version;
+        {%- endif %}
+            sha256 = "{{ metadata["sha256"] }}";
+          };
+        {% if metadata.packageConditions %}
+          # # Package conditions to handle
+          # # might have to sed setup.py and egg.info in patchPhase
+          # # sed -i "s/<package>.../<package>/"
+        {%- for condition in metadata.packageConditions %}
+          # {{ condition -}}
+        {% endfor %}{% endif %}{% if metadata.extraInputs %}
+          # # Extra packages (may not be necessary)
+        {%- for p in metadata.extraInputs %}
+          # {{ p -}}
+        {% endfor %}{% endif %}
+        {%- if metadata.buildInputs %}
+          buildInputs = [
+        {%- for p in metadata.buildInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+        {%- if metadata.checkInputs %}
+          checkInputs = [
+        {%- for p in metadata.checkInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+        {%- if metadata.propagatedBuildInputs %}
+          propagatedBuildInputs = [
+        {%- for p in metadata.propagatedBuildInputs %}
+            {{ p -}}
+        {% endfor %}
+          ];
+        {% endif %}
+          meta = with lib; {
+            description = "{{ metadata.description }}";
+            homepage = {{ metadata.homepage }};
+            license = licenses.{{ metadata.license }};
+            # maintainers = [ maintainers. ];
+          };
+        }
+    '''))
     return template.render(metadata=metadata)
 
 

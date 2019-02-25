@@ -13,6 +13,7 @@ import setuptools
 from distutils.dir_util import copy_tree
 import tempfile
 import textwrap
+from string import punctuation
 
 import jinja2
 
@@ -154,7 +155,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
         'python_version': package_json['info']['requires_python'],
         'sha256': package_release_json['digests']['sha256'],
         'url': package_release_json['url'],
-        'description': package_json['info']['summary'],
+        'description': package_json['info']['summary'].strip(punctuation),
         'homepage': package_json['info']['home_page'],
         'license': python_to_nix_license(package_json['info']['license']),
     }

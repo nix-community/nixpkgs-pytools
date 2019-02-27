@@ -1,44 +1,32 @@
-# nixpkgs-dev-tools
+# python nixpkgs tools
 
-These are scripts that I have written to remove the tedious nature of
-creating nix package derivations. The goal of these scripts is not to
-create a perfect package derivation.
+These are scripts written to remove the tedious nature of creating nix
+package derivations for nixpkgs. The goal of these scripts is not to
+create a perfect package derivation but complete as much as possible
+and guide the user on necissary changes.
 
-## usefull development commands
+All scripts are self contained and use `nix-shell` shebangs.
 
-Build Package in sandbox
-
-```
-nix-build <path-to-nixpkgs> -A <package> --option sandbox true
-```
-
-## general
+## python-package-init.py
 
 ```
-nix-build -I nixpkgs=<path-to-nixpkgs> check-meta.nix -A [ maintainers, license, homepage, broken ]
-```
+usage: python-package-init.py [-h] [--version VERSION] [--filename FILENAME]
+                              [-f]
+                              package
 
-List are packages that have given meta attribute
-  - maintainers :: checks that maintainer is defined
-  - license :: checks that a license is defined
-  - homepage :: checks that a homepage is defined
-  - broken :: checks for all packages marked broken
+positional arguments:
+  package              pypi package name
 
-## python
-
-```
-python/python-package-init.py <pypi-name> [--version <pypi-version>]
+optional arguments:
+  -h, --help           show this help message and exit
+  --version VERSION    pypi package version (stable if not specified)
+  --filename FILENAME  filename for nix derivation
+  -f, --force          Force creation of file, overwriting when it already
+                       exists
 ```
 
 Creates a `default.nix` derivation to go into
 `nixpkgs/pkgs/development/python-modules/<pypi-name>/default.nix`. This
 script is overly verbose so that you don't have to remember the name
 of attributes. Delete the ones that you don't need.
-
-```
-python/python-modules.sh <path-to-nixpkgs>
-```
-
-List all packages that are still in `pkgs/top-level/python-packages.nix`.
-
 

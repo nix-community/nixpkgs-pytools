@@ -28,3 +28,9 @@ Creates a `default.nix` derivation to go into
 script is overly verbose so that you don't have to remember the name
 of attributes. Delete the ones that you don't need.
 
+
+## Hacking on these tools
+`nix-shell` will load the correct environment for you, usage:
+```
+nix-shell
+```

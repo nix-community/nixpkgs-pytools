@@ -1,5 +1,7 @@
 # python nixpkgs tools
 
+[![Build Status](https://travis-ci.org/nix-community/nixpkgs-pytools.svg?branch=master)](https://travis-ci.org/nix-community/nixpkgs-pytools)
+
 These are scripts written to remove the tedious nature of creating nix
 package derivations for nixpkgs. The goal of these scripts is not to
 create a perfect package derivation but complete as much as possible
@@ -30,7 +32,9 @@ of attributes. Delete the ones that you don't need.
 
 
 ## Hacking on these tools
-`nix-shell` will load the correct environment for you, usage:
+
+`nix-shell` will load the correct environment for your usage:
+
 ```
 nix-shell
 ```

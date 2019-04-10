@@ -9,13 +9,14 @@ setup(
     long_description=open("README.md").read(),
     author="Christopher Ostrouchov",
     author_email="chris.ostrouchov@gmail.com",
-    install_requires=[
-        "jinja2", "setuptools"
-    ],
-    tests_require=[
-        "pytest"
-    ],
-    entry_points={"console_scripts": ["python-package-init = nixpkgs_pytools.python_package_init:main"]},
+    home_page="https://github.com/nix-community/nixpkgs-pytools/",
+    install_requires=["jinja2", "setuptools"],
+    tests_require=["pytest"],
+    entry_points={
+        "console_scripts": [
+            "python-package-init = nixpkgs_pytools.python_package_init:main"
+        ]
+    },
     classifiers=[
         "Natural Language :: English",
         "Intended Audience :: Developers",
@@ -26,6 +27,6 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Software Development :: Code Generators",
-        "Topic :: System :: Software Distribution"
+        "Topic :: System :: Software Distribution",
     ],
 )

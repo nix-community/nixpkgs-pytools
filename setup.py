@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="nixpkgs-pytools",
     description="Tools for removing the tedious nature of creating nixpkgs derivations",
-    version="1.0.0",
+    version="1.0.1",
     packages=["nixpkgs_pytools"],
     license="MIT",
     long_description=open("README.md").read(),

@@ -1,3 +1,5 @@
+# shell
+.direnv/
 # nix
 default.nix
 result
@@ -5,3 +7,5 @@ result
 # python
 __pycache__
 *.egg-info/
+build/
+dist/

@@ -3,14 +3,12 @@
 These are scripts written to remove the tedious nature of creating nix
 package derivations for nixpkgs. The goal of these scripts is not to
 create a perfect package derivation but complete as much as possible
-and guide the user on necissary changes.
+and guide the user on necessary changes.
 
-All scripts are self contained and use `nix-shell` shebangs.
-
-## python-package-init.py
+## python-package-init
 
 ```
-usage: python-package-init.py [-h] [--version VERSION] [--filename FILENAME]
+usage: python-package-init [-h] [--version VERSION] [--filename FILENAME]
                               [-f]
                               package
 
@@ -30,3 +28,9 @@ Creates a `default.nix` derivation to go into
 script is overly verbose so that you don't have to remember the name
 of attributes. Delete the ones that you don't need.
 
+
+## Hacking on these tools
+`nix-shell` will load the correct environment for you, usage:
+```
+nix-shell
+```

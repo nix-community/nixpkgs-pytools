@@ -17,12 +17,15 @@ setup(
     ],
     entry_points={"console_scripts": ["python-package-init = nixpkgs_pytools.python_package_init:main"]},
     classifiers=[
-        "Intended Audience :: Human",
         "Natural Language :: English",
+        "Intended Audience :: Developers",
         "Operating System :: POSIX :: Linux",
         "Development Status :: 3 - Alpha",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: Implementation :: CPython",
+        "Topic :: Software Development :: Code Generators",
+        "Topic :: System :: Software Distribution"
     ],
 )

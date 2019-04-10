@@ -9,7 +9,7 @@ setup(
     long_description=open("README.md").read(),
     author="Christopher Ostrouchov",
     author_email="chris.ostrouchov@gmail.com",
-    home_page="https://github.com/nix-community/nixpkgs-pytools/",
+    url="https://github.com/nix-community/nixpkgs-pytools/",
     install_requires=["jinja2", "setuptools"],
     tests_require=["pytest"],
     entry_points={

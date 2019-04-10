@@ -5,5 +5,7 @@ python3.pkgs.buildPythonPackage {
   propagatedBuildInputs = with python3.pkgs;[
     jinja2 setuptools
   ];
-  checkInputs = [ python3.pkgs.black ];
+
+  checkInputs = [ python3.pkgs.black python3.pkgs.pytest ];
+
 }

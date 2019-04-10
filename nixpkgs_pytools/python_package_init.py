@@ -16,6 +16,11 @@ import jinja2
 
 
 def main():
+    args = cli(sys.argv)
+    initialize_package(args.package, args.version, args.filename, args.force)
+
+
+def cli(arguments):
     parser = argparse.ArgumentParser()
     parser.add_argument('package', help="pypi package name")
     parser.add_argument('--version', help="pypi package version (stable if not specified)")
@@ -23,15 +28,18 @@ def main():
     parser.add_argument('-f', '--force', action="store_true", help="Force creation of file, overwriting when it already exists")
     args = parser.parse_args()
     print(args.package, args.version)
+    return args
 
-    data = download_package_json(args.package)
-    metadata = package_json_to_metadata(data, args.package, args.version)
 
-    directory = os.path.dirname(args.filename)
+def initialize_package(package, version, filename, force=False):
+    data = download_package_json(package)
+    metadata = package_json_to_metadata(data, package, version)
+
+    directory = os.path.dirname(filename)
     if directory:
         os.makedirs(directory, exist_ok=True)
-    mode = "w" if args.force else "x"
-    with open(args.filename, mode) as f:
+    mode = "w" if force else "x"
+    with open(filename, mode) as f:
         f.write(metadata_to_nix(metadata))
 
 
@@ -234,6 +242,7 @@ def determine_package_dependencies(package_json, url):
 def determine_dependencies_from_package(url):
     stdout = subprocess.check_output(['nix-prefetch-url', '--unpack', url], stderr=subprocess.STDOUT)
     nix_store_path = re.search(b"^unpacking...\npath is '(.*)'\n(.*)\n$", stdout).group(1)
+
     sys.path.append('.')
 
     with tempfile.TemporaryDirectory() as tempdir:
@@ -241,9 +250,11 @@ def determine_dependencies_from_package(url):
             current_directory = os.getcwd()
             copy_tree(nix_store_path.decode('utf-8'), tempdir, preserve_mode=False, preserve_times=False)
             os.chdir(tempdir)
+            sys.path.insert(0, tempdir)
             with mock.patch.object(setuptools, 'setup') as mock_setup:
                 import setup  # This is setup.py which calls setuptools.setup
         finally:
+            sys.path = sys.path[1:]
             os.chdir(current_directory)
 
     args, kwargs = mock_setup.call_args

@@ -12,6 +12,9 @@ setup(
     install_requires=[
         "jinja2", "setuptools"
     ],
+    tests_require=[
+        "pytest"
+    ],
     entry_points={"console_scripts": ["python-package-init = nixpkgs_pytools.python_package_init:main"]},
     classifiers=[
         "Intended Audience :: Human",

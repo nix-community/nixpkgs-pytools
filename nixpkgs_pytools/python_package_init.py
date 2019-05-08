@@ -6,7 +6,6 @@ import re
 import sys
 import os
 from unittest import mock
-import setuptools
 from distutils.dir_util import copy_tree
 import tempfile
 import textwrap
@@ -278,8 +277,18 @@ def determine_dependencies_from_package(url):
             )
             os.chdir(tempdir)
             sys.path.insert(0, tempdir)
-            with mock.patch.object(setuptools, "setup") as mock_setup:
-                import setup  # This is setup.py which calls setuptools.setup
+
+            with open(os.path.join(tempdir, 'setup.py')) as f:
+                setup_contents = f.read()
+
+            if re.search('setuptools', setup_contents):
+                mock_path = 'setuptools.setup'
+            else:
+                mock_path = 'distutils.core.setup'
+
+            with mock.patch(mock_path) as mock_setup:
+                exec(setup_contents)
+
         finally:
             sys.path = sys.path[1:]
             os.chdir(current_directory)

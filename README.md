@@ -11,8 +11,8 @@ and guide the user on necessary changes.
 
 ```
 usage: python-package-init [-h] [--version VERSION] [--filename FILENAME]
-                              [-f]
-                              package
+                           [--stdout] [-f]
+                           package
 
 positional arguments:
   package              pypi package name
@@ -21,8 +21,8 @@ optional arguments:
   -h, --help           show this help message and exit
   --version VERSION    pypi package version (stable if not specified)
   --filename FILENAME  filename for nix derivation
-  -f, --force          Force creation of file, overwriting when it already
-                       exists
+  --stdout             Print the nix derivation to stdout
+  -f, --force          Force creation of file, overwriting when it already exists
 ```
 
 Creates a `default.nix` derivation to go into

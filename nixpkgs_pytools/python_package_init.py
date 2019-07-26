@@ -26,7 +26,7 @@ from .utils import determine_filename_extension
 
 def main():
     args = cli(sys.argv)
-    initialize_package(args.package, args.version, args.filename, args.force)
+    content = initialize_package(args.package, args.version, args.filename, args.force, args.stdout)
 
 
 def cli(arguments):
@@ -39,6 +39,10 @@ def cli(arguments):
         "--filename", default="default.nix", help="filename for nix derivation"
     )
     parser.add_argument(
+        "--stdout",
+        action="store_true",
+        help="Print the nix derivation to stdout")
+    parser.add_argument(
         "-f",
         "--force",
         action="store_true",
@@ -49,17 +53,24 @@ def cli(arguments):
     return args
 
 
-def initialize_package(package_name, version, filename, force=False):
+def initialize_package(package_name, version, filename, force=False, to_stdout=False):
     data = download_package_json(package_name)
     metadata = package_json_to_metadata(data, package_name, version)
+    content = metadata_to_nix(metadata)
+    if to_stdout:
+        print(content)
+    else:
+        mode = "w" if force else "x"
+        write_nix_file(content, filename, mode)
+        print(f'Package "{package_name}" succesfully written to "{filename}"')
 
+
+def write_nix_file(content, filename, mode):
     directory = os.path.dirname(filename)
     if directory:
         os.makedirs(directory, exist_ok=True)
-    mode = "w" if force else "x"
     with open(filename, mode) as f:
-        f.write(metadata_to_nix(metadata))
-    print(f'Package "{package_name}" succesfully written to "{filename}"')
+        f.write(content)
 
 
 def package_json_to_metadata(package_json, package_name, package_version):

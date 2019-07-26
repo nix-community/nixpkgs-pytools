@@ -5,16 +5,16 @@ import urllib.request
 
 def format_description(description: str) -> str:
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
-    description = re.sub('\s+', description.strip(string.punctuation), ' ')
+    description = re.sub("\s+", description.strip(string.punctuation), " ")
     return description[0].upper() + description[1:]
 
 
 def format_homepage(homepage: str) -> str:
     """Use https url if possible"""
-    if re.match('https://', homepage):
+    if re.match("https://", homepage):
         return homepage
 
-    https_homepage = homepage.replace('http://', 'https://')
+    https_homepage = homepage.replace("http://", "https://")
     try:
         response = urllib.request.urlopen(https_homepage)
         return https_homepage

@@ -37,7 +37,9 @@ def cli(arguments):
         help="Force creation of file, overwriting when it already exists",
     )
     args = parser.parse_args()
-    print('Fetching package="%s" version="%s"' % (args.package, args.version or "stable"))
+    print(
+        'Fetching package="%s" version="%s"' % (args.package, args.version or "stable")
+    )
     return args
 
 
@@ -83,7 +85,8 @@ def package_json_to_metadata(package_json, package_name, package_version):
             break
     else:
         raise ValueError(
-            "no source distribution (sdist) found for %s:%s" % (package_name, package_version)
+            "no source distribution (sdist) found for %s:%s"
+            % (package_name, package_version)
         )
 
     metadata = {
@@ -96,7 +99,8 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "extension": filename_extension(
             package_release_json["filename"],
             package_json["info"]["name"],
-            package_version),
+            package_version,
+        ),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),
         "license": format_license(package_json["info"]["license"]),
@@ -107,9 +111,9 @@ def package_json_to_metadata(package_json, package_name, package_version):
 
 
 def filename_extension(filename: str, package_name: str, version: str) -> str:
-    match = re.match('%s-%s\.(.+)' % (package_name, version), filename)
+    match = re.match("%s-%s\.(.+)" % (package_name, version), filename)
     if match is None:
-        raise ValueError('could not determine extension of package: %s' % filename)
+        raise ValueError("could not determine extension of package: %s" % filename)
     return match.group(1)
 
 
@@ -205,20 +209,22 @@ def determine_dependencies_from_package(url):
             os.chdir(tempdir)
             sys.path.insert(0, tempdir)
 
-            with open(os.path.join(tempdir, 'setup.py')) as f:
+            with open(os.path.join(tempdir, "setup.py")) as f:
                 setup_contents = f.read()
 
-            if re.search('setuptools', setup_contents):
-                mock_path = 'setuptools.setup'
+            if re.search("setuptools", setup_contents):
+                mock_path = "setuptools.setup"
             else:
-                mock_path = 'distutils.core.setup'
+                mock_path = "distutils.core.setup"
 
             with mock.patch(mock_path) as mock_setup:
                 exec(setup_contents)
 
             args, kwargs = mock_setup.call_args
         except Exception as e:
-            print('mocking setup.py::setup(...) failed thus dependency information is likely incomplete')
+            print(
+                "mocking setup.py::setup(...) failed thus dependency information is likely incomplete"
+            )
             print('mocking error: "%s"' % e)
             args, kwargs = [], {}
         finally:

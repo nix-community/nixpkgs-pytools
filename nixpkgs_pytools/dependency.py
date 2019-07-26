@@ -86,7 +86,9 @@ def sanitize_dependencies(packages):
         if match:
             has_condition = True
 
-        match = re.search("^([A-Za-z][A-Za-z\-_0-9]+)", format_normalized_package_name(package))
+        match = re.search(
+            "^([A-Za-z][A-Za-z\-_0-9]+)", format_normalized_package_name(package)
+        )
         return match.group(1), has_condition
 
     packageConditions = []

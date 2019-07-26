@@ -17,7 +17,7 @@ from .format import (
     format_description,
     format_homepage,
     format_license,
-    format_normalized_package_name
+    format_normalized_package_name,
 )
 from .dependency import determine_package_dependencies
 from .download import download_package_json
@@ -44,9 +44,7 @@ def cli(arguments):
         help="Force creation of file, overwriting when it already exists",
     )
     args = parser.parse_args()
-    print(
-        f'Fetching package="{args.package}" version="{args.version or "stable"}"'
-    )
+    print(f'Fetching package="{args.package}" version="{args.version or "stable"}"')
     return args
 
 
@@ -74,9 +72,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
     package_version = package_version or package_json["info"]["version"]
 
     if package_version not in package_json["releases"]:
-        raise ValueError(
-            f'package version "{package_version}" does not exist on pypi'
-        )
+        raise ValueError(f'package version "{package_version}" does not exist on pypi')
 
     package_release_json = None
     for release in package_json["releases"][package_version]:
@@ -96,9 +92,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
         "extension": determine_filename_extension(
-            package_release_json["filename"],
-            package_name,
-            package_version,
+            package_release_json["filename"], package_name, package_version
         ),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),

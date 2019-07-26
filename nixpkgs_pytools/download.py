@@ -22,7 +22,7 @@ def download_package(url, directory, extract_archive=True):
     base_filename = os.path.join(directory, os.path.basename(url))
 
     with urllib.request.urlopen(url) as response:
-        with open(base_filename, 'wb') as f:
+        with open(base_filename, "wb") as f:
             f.write(response.read())
 
     if extract_archive:

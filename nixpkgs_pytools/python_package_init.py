@@ -65,6 +65,12 @@ def download_package_json(package_name):
             )
 
 
+def cleanup_package_description(description):
+    """Normalize whitespace, remove punctuation, and capitalize first letter"""
+    description = re.sub('\s+', description.strip(punctuation), ' ')
+    return description[0].upper() + description[1:]
+
+
 def python_to_nix_license(license):
     """Convert python setup.py license to nix license
 
@@ -181,7 +187,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "python_version": package_json["info"]["requires_python"],
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
-        "description": package_json["info"]["summary"].strip(punctuation),
+        "description": cleanup_package_description(package_json["info"]["summary"]),
         "homepage": package_json["info"]["home_page"],
         "license": python_to_nix_license(package_json["info"]["license"]),
     }

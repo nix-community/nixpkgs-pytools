@@ -92,7 +92,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
         "extension": determine_filename_extension(
-            package_release_json["filename"], package_name, package_version
+            package_release_json["filename"], package_json["info"]["name"], package_version
         ),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),

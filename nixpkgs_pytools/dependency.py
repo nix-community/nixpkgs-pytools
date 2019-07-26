@@ -8,24 +8,25 @@ from .format import format_normalized_package_name
 
 
 def determine_package_dependencies(package_json, url):
-    # initially use requires_dist
-    if package_json["info"]["requires_dist"]:
-        extraInputs = []
-        propagatedBuildInputs = []
-        for package in package_json["info"]["requires_dist"]:
-            if re.search("extra\s*==\s*", package):
-                extraInputs.append(package)
-            else:
-                propagatedBuildInputs.append(package)
-        dependencies = {
-            "extraInputs": extraInputs,
-            "buildInputs": [],
-            "checkInputs": [],
-            "propagatedBuildInputs": propagatedBuildInputs,
-        }
-    else:
-        # fallover if requires_dist not populated
+    try:
         dependencies = determine_dependencies_from_package(url)
+    except:
+        # initially use requires_dist
+        if package_json["info"]["requires_dist"]:
+            extraInputs = []
+            propagatedBuildInputs = []
+            for package in package_json["info"]["requires_dist"]:
+                if re.search("extra\s*==\s*", package):
+                    extraInputs.append(package)
+                else:
+                    propagatedBuildInputs.append(package)
+            dependencies = {
+                "extraInputs": extraInputs,
+                "buildInputs": [],
+                "checkInputs": [],
+                "propagatedBuildInputs": propagatedBuildInputs,
+            }
+
     return sanitize_dependencies(dependencies)
 
 

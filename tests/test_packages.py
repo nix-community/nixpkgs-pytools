@@ -3,8 +3,11 @@ import pytest
 from nixpkgs_pytools.python_package_init import initialize_package
 
 
+# packages are added to tests when I run into
+# a new issue with auto packaging
 @pytest.mark.parametrize("package_name", [
-    'Flask', # setuptools
+    'flask', # setuptools
+    'Flask', # ensure package name not case sensitive
     'six',   # setuptools
     'dask',  # setuptools
     'pyxl3', # distutils

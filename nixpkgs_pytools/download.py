@@ -18,12 +18,21 @@ def download_package_json(package_name):
             )
 
 
-def download_package(url, directory, extract_archive=True):
+def download_package(url, directory):
     base_filename = os.path.join(directory, os.path.basename(url))
 
     with urllib.request.urlopen(url) as response:
         with open(base_filename, "wb") as f:
             f.write(response.read())
 
-    if extract_archive:
-        shutil.unpack_archive(base_filename, directory)
+    previous_directory_state = set(os.listdir(directory))
+    shutil.unpack_archive(base_filename, directory)
+    current_directory_state = set(os.listdir(directory))
+
+    changed_filenames = current_directory_state - previous_directory_state
+    if len(changed_filenames) > 1:
+        raise ValueError(
+            f"expected that extracting sdist archive only produces one directory: {changed_filenames}"
+        )
+
+    return list(changed_filenames)[0]

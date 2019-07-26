@@ -21,6 +21,7 @@ from .format import (
 )
 from .dependency import determine_package_dependencies
 from .download import download_package_json
+from .utils import determine_filename_extension
 
 
 def main():
@@ -61,13 +62,6 @@ def initialize_package(package_name, version, filename, force=False):
     print(f'Package "{package_name}" succesfully written to "{filename}"')
 
 
-def determine_filename_extension(filename: str, package_name: str, version: str) -> str:
-    match = re.match(f"{package_name}-{version}\.(.+)", filename)
-    if match is None:
-        raise ValueError(f"could not determine extension of package: {filename}")
-    return match.group(1)
-
-
 def package_json_to_metadata(package_json, package_name, package_version):
     package_version = package_version or package_json["info"]["version"]
 
@@ -92,7 +86,9 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
         "extension": determine_filename_extension(
-            package_release_json["filename"], package_json["info"]["name"], package_version
+            package_release_json["filename"],
+            package_json["info"]["name"],
+            package_version,
         ),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),

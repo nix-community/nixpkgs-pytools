@@ -35,7 +35,7 @@ def cli(arguments):
         help="Force creation of file, overwriting when it already exists",
     )
     args = parser.parse_args()
-    print(args.package, args.version)
+    print('Fetching package="%s" version="%s"' % (args.package, args.version or "stable"))
     return args
 
 
@@ -53,12 +53,16 @@ def initialize_package(package, version, filename, force=False):
 
 def download_package_json(package_name):
     url = "https://pypi.org/pypi/%s/json" % package_name
-    with urllib.request.urlopen(url) as response:
-        if response.getcode() != 200:
+    try:
+        response = urllib.request.urlopen(url)
+        return json.loads(response.read().decode())
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            raise ValueError('package "%s" does not exist on pypi' % package_name)
+        else:
             raise ValueError(
                 'error fetching pypi package "%s" information' % package_name
             )
-        return json.loads(response.read().decode())
 
 
 def python_to_nix_license(license):
@@ -289,11 +293,13 @@ def determine_dependencies_from_package(url):
             with mock.patch(mock_path) as mock_setup:
                 exec(setup_contents)
 
+            args, kwargs = mock_setup.call_args
+        except:
+            print('mocking setup.py::setup(...) failed thus dependency information is likely incomplete')
+            args, kwargs = [], {}
         finally:
             sys.path = sys.path[1:]
             os.chdir(current_directory)
-
-    args, kwargs = mock_setup.call_args
 
     extraInputs = []
     for k, v in kwargs.get("extras_require", {}).items():

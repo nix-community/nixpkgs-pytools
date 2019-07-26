@@ -1,4 +1,5 @@
 import pytest
+import unittest
 
 from nixpkgs_pytools.python_package_init import initialize_package
 
@@ -19,3 +20,23 @@ def test_packages(tmp_path, package_name):
     initialize_package(package_name=package_name, version=None, filename=filename)
 
     print(open(filename).read())
+
+
+@pytest.mark.parametrize("package_name, dependencies", [
+    ('nixpkgs-pytools', {
+        'checkInputs': {'pytest'},
+        'buildInputs': set(),
+        'propagatedBuildInputs': {'setuptools', 'jinja2'}
+    }),
+])
+def test_package_dependencies(tmp_path, package_name, dependencies):
+    filename = tmp_path / f"{package_name}.nix"
+
+    with unittest.mock.patch('nixpkgs_pytools.python_package_init.metadata_to_nix') as mock_func:
+        mock_func.return_value = ""
+        initialize_package(package_name=package_name, version=None, filename=filename)
+
+    args, kwargs = mock_func.call_args
+    assert set(args[0]['buildInputs']) == dependencies['buildInputs']
+    assert set(args[0]['checkInputs']) == dependencies['checkInputs']
+    assert set(args[0]['propagatedBuildInputs']) == dependencies['propagatedBuildInputs']

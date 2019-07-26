@@ -3,6 +3,11 @@ import string
 import urllib.request
 
 
+def format_normalized_package_name(package_name: str) -> str:
+    """Normalize a package name"""
+    return package_name.replace(".", "-").replace("_", "-").lower()
+
+
 def format_description(description: str) -> str:
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
     description = re.sub("\s+", description.strip(string.punctuation), " ")

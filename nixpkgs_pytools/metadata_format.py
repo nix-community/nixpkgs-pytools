@@ -3,13 +3,13 @@ import string
 import urllib.request
 
 
-def format_description(description):
+def format_description(description: str) -> str:
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
     description = re.sub('\s+', description.strip(string.punctuation), ' ')
     return description[0].upper() + description[1:]
 
 
-def format_homepage(homepage):
+def format_homepage(homepage: str) -> str:
     """Use https url if possible"""
     if re.match('https://', homepage):
         return homepage
@@ -22,7 +22,7 @@ def format_homepage(homepage):
         return ""
 
 
-def format_license(license):
+def format_license(license: str) -> str:
     """Convert python setup.py license to nix license
 
     These licenses account for about 95% of all licenses. The

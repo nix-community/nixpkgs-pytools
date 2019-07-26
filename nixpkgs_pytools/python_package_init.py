@@ -83,7 +83,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
             break
     else:
         raise ValueError(
-            "no source distribution found for %s:%s" % (package_name, package_version)
+            "no source distribution (sdist) found for %s:%s" % (package_name, package_version)
         )
 
     metadata = {
@@ -93,6 +93,10 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "python_version": package_json["info"]["requires_python"],
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
+        "extension": filename_extension(
+            package_release_json["filename"],
+            package_json["info"]["name"],
+            package_version),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),
         "license": format_license(package_json["info"]["license"]),
@@ -102,8 +106,15 @@ def package_json_to_metadata(package_json, package_name, package_version):
     return metadata
 
 
+def filename_extension(filename: str, package_name: str, version: str) -> str:
+    match = re.match('%s-%s\.(.+)' % (package_name, version), filename)
+    if match is None:
+        raise ValueError('could not determine extension of package: %s' % filename)
+    return match.group(1)
+
+
 def normalize_name(name: str) -> str:
-    """Normalize a package name."""
+    """Normalize a package name"""
     return name.replace(".", "-").replace("_", "-").lower()
 
 
@@ -252,6 +263,9 @@ def metadata_to_nix(metadata):
             inherit version;
         {%- else %}
             inherit pname version;
+        {%- endif %}
+        {%- if metadata.extension != "tar.gz" %}
+            extension = "{{ metadata.extension }}";
         {%- endif %}
             sha256 = "{{ metadata["sha256"] }}";
           };

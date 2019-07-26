@@ -10,6 +10,9 @@ def format_normalized_package_name(package_name: str) -> str:
 
 def format_description(description: str) -> str:
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
+    if len(description) == 0:
+        return ""
+
     description = re.sub("\s+", description.strip(string.punctuation), " ")
     return description[0].upper() + description[1:]
 

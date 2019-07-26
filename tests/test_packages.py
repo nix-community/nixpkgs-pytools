@@ -7,12 +7,13 @@ from nixpkgs_pytools.python_package_init import initialize_package
 # packages are added to tests when I run into
 # a new issue with auto packaging
 @pytest.mark.parametrize("package_name", [
-    'flask', # setuptools
-    'Flask', # ensure package name not case sensitive
-    'six',   # setuptools
-    'dask',  # setuptools
-    'pyxl3', # distutils
-    'numpy'  # mocking setup fails
+    'flask',  # setuptools
+    'Flask',  # ensure package name not case sensitive
+    'six',    # setuptools
+    'dask',   # setuptools
+    'pyxl3',  # distutils
+    'numpy',  # mocking setup fails
+    'capnpy', # empty description
 ])
 def test_packages(tmp_path, package_name):
     filename = tmp_path / f"{package_name}.nix"

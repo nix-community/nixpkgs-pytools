@@ -22,11 +22,18 @@ from .format import (
 from .dependency import determine_package_dependencies
 from .download import download_package_json
 from .utils import determine_filename_extension
+from .output import write_nix_file, write_nixpkgs_package
 
 
 def main():
     args = cli(sys.argv)
-    content = initialize_package(args.package, args.version, args.filename, args.force, args.stdout)
+    content = initialize_package(
+        args.package,
+        args.version,
+        args.filename,
+        args.force,
+        args.stdout,
+        args.nixpkgs_root)
 
 
 def cli(arguments):
@@ -43,6 +50,9 @@ def cli(arguments):
         action="store_true",
         help="Print the nix derivation to stdout")
     parser.add_argument(
+        "--nixpkgs-root",
+        help="Root directory of nixpkgs")
+    parser.add_argument(
         "-f",
         "--force",
         action="store_true",
@@ -53,24 +63,17 @@ def cli(arguments):
     return args
 
 
-def initialize_package(package_name, version, filename, force=False, to_stdout=False):
+def initialize_package(package_name, version, filename, force=False, to_stdout=False, nixpkgs_root=None):
     data = download_package_json(package_name)
     metadata = package_json_to_metadata(data, package_name, version)
     content = metadata_to_nix(metadata)
     if to_stdout:
         print(content)
+    elif nixpkgs_root is not None:
+        write_nixpkgs_package(content, package_name, nixpkgs_root, force)
     else:
-        mode = "w" if force else "x"
-        write_nix_file(content, filename, mode)
+        write_nix_file(content, filename, force)
         print(f'Package "{package_name}" succesfully written to "{filename}"')
-
-
-def write_nix_file(content, filename, mode):
-    directory = os.path.dirname(filename)
-    if directory:
-        os.makedirs(directory, exist_ok=True)
-    with open(filename, mode) as f:
-        f.write(content)
 
 
 def package_json_to_metadata(package_json, package_name, package_version):

@@ -65,13 +65,26 @@ def download_package_json(package_name):
             )
 
 
-def cleanup_package_description(description):
+def format_description(description):
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
     description = re.sub('\s+', description.strip(punctuation), ' ')
     return description[0].upper() + description[1:]
 
 
-def python_to_nix_license(license):
+def format_homepage(homepage):
+    """Use https url if possible"""
+    if re.match('https://', homepage):
+        return homepage
+
+    https_homepage = homepage.replace('http://', 'https://')
+    try:
+        response = urllib.request.urlopen(https_homepage)
+        return https_homepage
+    except e:
+        return ""
+
+
+def format_license(license):
     """Convert python setup.py license to nix license
 
     These licenses account for about 95% of all licenses. The
@@ -187,9 +200,9 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "python_version": package_json["info"]["requires_python"],
         "sha256": package_release_json["digests"]["sha256"],
         "url": package_release_json["url"],
-        "description": cleanup_package_description(package_json["info"]["summary"]),
-        "homepage": package_json["info"]["home_page"],
-        "license": python_to_nix_license(package_json["info"]["license"]),
+        "description": format_description(package_json["info"]["summary"]),
+        "homepage": format_homepage(package_json["info"]["home_page"]),
+        "license": format_license(package_json["info"]["license"]),
     }
 
     metadata.update(determine_package_dependencies(package_json, metadata["url"]))

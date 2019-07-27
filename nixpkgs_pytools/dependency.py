@@ -3,19 +3,268 @@ import sys
 import os
 import tempfile
 import unittest
+import ast
+import glob
 
 from .download import download_package
 from .format import format_normalized_package_name
+
+
+# https://docs.python.org/3/library/index.html
+STDLIB_MODULES = {
+    # text processing
+    "string",
+    "re",
+    "difflib",
+    "textwrap",
+    "unicodedata",
+    "stringprep",
+    "readline",
+    "rlcompleter",
+    # binary data services
+    "struct",
+    "codecs",
+    # data types
+    "datetime",
+    "calendar",
+    "collections",
+    "heapq",
+    "bisect",
+    "array",
+    "weakref",
+    "types",
+    "copy",
+    "pprint",
+    "reprlib",
+    "enum",
+    # numeric and mathematical modules
+    "numbers",
+    "math",
+    "cmath",
+    "decimal",
+    "fractions",
+    "random",
+    "statistics",
+    # functional programming modules
+    "itertools",
+    "functools",
+    "operator",
+    # file and directory access
+    "pathlib",
+    "fileinput",
+    "stat",
+    "filecmp",
+    "tempfile",
+    "glob",
+    "fnmatch",
+    "linecache",
+    "shutil",
+    "macpath",
+    # data persistence
+    "pickle",
+    "copyreg",
+    "shelve",
+    "marshal",
+    "dbm",
+    "sqlite3",
+    # data compression and archiving
+    "zlib",
+    "gzip",
+    "bz2",
+    "lzma",
+    "zipfile",
+    "tarfile",
+    # file formats
+    "csv",
+    "configparser",
+    "netrc",
+    "xdrlib",
+    "plistlib",
+    # crypographic services
+    "hashlib",
+    "hmac",
+    "secrets",
+    # generic operating system services
+    "os",
+    "io",
+    "time",
+    "argparse",
+    "getopt",
+    "logging",
+    "getpass",
+    "curses",
+    "platform",
+    "errno",
+    "ctypes",
+    # concurrent execution
+    "threading",
+    "multiprocessing",
+    "concurrent",
+    "subprocess",
+    "sched",
+    "queue",
+    "_thread",
+    "_dummy_thread",
+    "dummy_threading",
+    # contextvars
+    "contextvars",
+    # networking and interprocess communication
+    "asyncio",
+    "socket",
+    "ssl",
+    "select",
+    "selectors",
+    "asyncore",
+    "asynchat",
+    "signal",
+    "mmap",
+    # internet data handling
+    "email",
+    "json",
+    "mailcap",
+    "mailbox",
+    "mimetypes",
+    "base64",
+    "binhex",
+    "binascii",
+    "quopri",
+    "uu",
+    # structured markup processing tools
+    "html",
+    "xml",
+    # internet protocols and support
+    "webbrowser",
+    "cgi",
+    "cgitb",
+    "wsgiref",
+    "urllib",
+    "ftplib",
+    "poplib",
+    "imaplib",
+    "nntplib",
+    "smtplib",
+    "smtpd",
+    "telnetlib",
+    "uuid",
+    "socketserver",
+    "xmlrpc",
+    "ipaddress",
+    # multimedia
+    "audioop",
+    "aifc",
+    "sunau",
+    "wave",
+    "chunk",
+    "colorsys",
+    "imghdr",
+    "sndhdr",
+    "ossaudiodev",
+    # internationalization
+    "gettext",
+    "locale",
+    # program frameworks
+    "turtle",
+    "cmd",
+    "shlex",
+    # graphical user interfaces with tk
+    "tkinter",
+    # development tools
+    "typing",
+    "pydoc",
+    "doctest",
+    "unittest",
+    "lib2to3",
+    "test",
+    # debugging and profiling
+    "bdb",
+    "faulthandler",
+    "pdb",
+    "timeit",
+    "trace",
+    "tracemalloc",
+    # software packaging and distribution
+    "distutils",
+    "ensurepip",
+    "venv",
+    "zipapp",
+    # python runtime services
+    "sys",
+    "sysconfig",
+    "builtins",
+    "warnings",
+    "dataclasses",
+    "contextlib",
+    "abc",
+    "atexit",
+    "traceback",
+    "__future__",
+    "gc",
+    "inspect",
+    "site",
+    # custom python interpreters
+    "code",
+    "codeop",
+    # importing modules
+    "zipimport",
+    "pkgutil",
+    "modulefinder",
+    "runpy",
+    "importlib",
+    # python language services
+    "parser",
+    "ast",
+    "symtable",
+    "symbol",
+    "token",
+    "keyword",
+    "tokenize",
+    "tabnanny",
+    "pyclbr",
+    "py_compile",
+    "compileall",
+    "dis",
+    "pickletools",
+    # miscellaneous services
+    "formatter",
+    # ms windows specific services
+    "msilib",
+    "msvcrt",
+    "winreg",
+    "winsound",
+    # unix specific services
+    "posix",
+    "pwd",
+    "spwd",
+    "grp",
+    "crypt",
+    "termios",
+    "tty",
+    "pty",
+    "fcntl",
+    "pipes",
+    "resource",
+    "nis",
+    "syslog",
+    # superseded modules
+    "optparse",
+    "imp",
+    # undocumented modules
+    "posixpath",
+    "ntpath",
+}
 
 
 def determine_package_dependencies(package_json, url):
     try:
         with tempfile.TemporaryDirectory() as tempdir:
             extracted_directory = download_package(url, tempdir)
-            dependencies = determine_dependencies_from_package(
-                os.path.join(tempdir, extracted_directory)
-            )
-    except:
+            package_directory = os.path.join(tempdir, extracted_directory)
+
+            ## should wait since a lot of false positives
+            # determine_dependencies_from_python_ast(package_directory)
+
+            dependencies = determine_dependencies_from_mock_setup(package_directory)
+    except Exception as e:
         dependencies = {
             "extraInputs": [],
             "buildInputs": [],
@@ -38,8 +287,7 @@ def determine_package_dependencies(package_json, url):
     return sanitize_dependencies(dependencies)
 
 
-def determine_dependencies_from_package(directory):
-
+def determine_dependencies_from_mock_setup(directory):
     try:
         current_directory = os.getcwd()
         os.chdir(directory)
@@ -82,6 +330,69 @@ def determine_dependencies_from_package(directory):
         "checkInputs": kwargs.get("tests_require", []),
         "propagatedBuildInputs": kwargs.get("install_requires", []),
     }
+
+
+class ImportVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.imports = set()
+
+    def visit_Import(self, node):
+        for name in node.names:
+            namespace = tuple(name.name.split("."))
+            self.imports.add(namespace[0])
+
+    def visit_ImportFrom(self, node):
+        if node.module is None:  # relative import
+            return
+
+        partial_namespace = tuple(node.module.split("."))
+        self.imports.add(partial_namespace[0])
+
+
+def determine_dependencies_from_python_ast(directory):
+    dependencies = {
+        "extraInputs": set(),
+        "buildInputs": set(),
+        "checkInputs": set(),
+        "propagatedBuildInputs": set(),
+    }
+
+    filenames = list(
+        glob.glob(os.path.join(directory, "**", "*.py"), recursive=True)
+    ) + list(glob.glob(os.path.join(directory, "*.py"), recursive=True))
+    for filename in filenames:
+        try:
+            with open(filename) as f:
+                tree = ast.parse(f.read())
+        except SyntaxError:
+            continue
+
+        import_visitor = ImportVisitor()
+        import_visitor.visit(tree)
+
+        namespaces = import_visitor.imports - STDLIB_MODULES
+
+        if "setup.py" in filename:
+            dependencies["buildInputs"] = dependencies["buildInputs"] | namespaces
+        elif "test" in filename:
+            dependencies["checkInputs"] = dependencies["buildInputs"] | namespaces
+        elif "doc" in filename:
+            dependencies["extraInputs"] = dependencies["extraInputs"] | namespaces
+        else:
+            dependencies["propagatedBuildInputs"] = (
+                dependencies["propagatedBuildInputs"] | namespaces
+            )
+
+    dependencies["buildInputs"] = (
+        dependencies["buildInputs"] - dependencies["propagatedBuildInputs"]
+    )
+    dependencies["checkInputs"] = (
+        dependencies["checkInputs"] - dependencies["propagatedBuildInputs"]
+    )
+
+    import pprint
+
+    pprint.pprint(dependencies)
 
 
 def sanitize_dependencies(packages):

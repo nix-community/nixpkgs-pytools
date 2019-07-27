@@ -16,6 +16,7 @@ from nixpkgs_pytools.python_package_init import initialize_package
         "pyxl3",  # distutils
         "numpy",  # mocking setup fails
         "capnpy",  # empty description
+        "pytest",  # cannot unpack non-iterable NoneType object
     ],
 )
 def test_packages(tmp_path, package_name):

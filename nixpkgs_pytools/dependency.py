@@ -16,6 +16,13 @@ def determine_package_dependencies(package_json, url):
                 os.path.join(tempdir, extracted_directory)
             )
     except:
+        dependencies = {
+            "extraInputs": [],
+            "buildInputs": [],
+            "checkInputs": [],
+            "propagatedBuildInputs": [],
+        }
+
         # default to using metadata is setup mock failed
         if package_json["info"]["requires_dist"]:
             extraInputs = []
@@ -25,12 +32,8 @@ def determine_package_dependencies(package_json, url):
                     extraInputs.append(package)
                 else:
                     propagatedBuildInputs.append(package)
-            dependencies = {
-                "extraInputs": extraInputs,
-                "buildInputs": [],
-                "checkInputs": [],
-                "propagatedBuildInputs": propagatedBuildInputs,
-            }
+            dependencies["extraInputs"] = extraInputs
+            dependencies["propagatedBuildInputs"] = propagatedBuildInputs
 
     return sanitize_dependencies(dependencies)
 
@@ -41,8 +44,7 @@ def determine_dependencies_from_package(directory):
         current_directory = os.getcwd()
         os.chdir(directory)
 
-        sys.path.append(".")
-        sys.path.insert(0, current_directory)
+        sys.path.insert(0, directory)
 
         with open("setup.py") as f:
             setup_contents = f.read()
@@ -61,7 +63,7 @@ def determine_dependencies_from_package(directory):
             "mocking setup.py::setup(...) failed thus dependency information is likely incomplete"
         )
         print(f'mocking error: "{e}"')
-        args, kwargs = [], {}
+        raise e
     finally:
         sys.path = sys.path[1:]
         os.chdir(current_directory)

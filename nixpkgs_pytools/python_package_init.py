@@ -33,7 +33,8 @@ def main():
         args.filename,
         args.force,
         args.stdout,
-        args.nixpkgs_root)
+        args.nixpkgs_root,
+    )
 
 
 def cli(arguments):
@@ -46,12 +47,9 @@ def cli(arguments):
         "--filename", default="default.nix", help="filename for nix derivation"
     )
     parser.add_argument(
-        "--stdout",
-        action="store_true",
-        help="Print the nix derivation to stdout")
-    parser.add_argument(
-        "--nixpkgs-root",
-        help="Root directory of nixpkgs")
+        "--stdout", action="store_true", help="Print the nix derivation to stdout"
+    )
+    parser.add_argument("--nixpkgs-root", help="Root directory of nixpkgs")
     parser.add_argument(
         "-f",
         "--force",
@@ -63,7 +61,9 @@ def cli(arguments):
     return args
 
 
-def initialize_package(package_name, version, filename, force=False, to_stdout=False, nixpkgs_root=None):
+def initialize_package(
+    package_name, version, filename, force=False, to_stdout=False, nixpkgs_root=None
+):
     data = download_package_json(package_name)
     metadata = package_json_to_metadata(data, package_name, version)
     content = metadata_to_nix(metadata)
@@ -74,6 +74,14 @@ def initialize_package(package_name, version, filename, force=False, to_stdout=F
     else:
         write_nix_file(content, filename, force)
         print(f'Package "{package_name}" succesfully written to "{filename}"')
+
+
+def determine_check_phase(metadata):
+    if "pytest" in metadata["checkInputs"]:
+        return "pytest"
+    elif "nose" in metadata["checkInputs"]:
+        return "nosetests"
+    return None
 
 
 def package_json_to_metadata(package_json, package_name, package_version):
@@ -110,6 +118,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
     }
 
     metadata.update(determine_package_dependencies(package_json, metadata["url"]))
+    metadata["checkPhase"] = determine_check_phase(metadata)
     return metadata
 
 
@@ -172,6 +181,11 @@ def metadata_to_nix(metadata):
             {{ p -}}
         {% endfor %}
           ];
+        {% endif %}
+        {%- if metadata.checkPhase %}
+          checkPhase = ''
+            {{metadata.checkPhase|indent(width=6)}}
+          '';
         {% endif %}
           meta = with lib; {
             description = "{{ metadata.description }}";

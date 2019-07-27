@@ -26,7 +26,7 @@ def format_homepage(homepage: str) -> str:
     try:
         response = urllib.request.urlopen(https_homepage)
         return https_homepage
-    except e:
+    except:
         return ""
 
 

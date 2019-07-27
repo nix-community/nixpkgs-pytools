@@ -7,6 +7,7 @@ setup(
     packages=["nixpkgs_pytools"],
     license="MIT",
     long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     author="Christopher Ostrouchov",
     author_email="chris.ostrouchov@gmail.com",
     url="https://github.com/nix-community/nixpkgs-pytools/",

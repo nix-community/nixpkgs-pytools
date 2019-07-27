@@ -12,7 +12,6 @@ deploy:
   user: nix-community
   password:
     secure: ciTqxTHtqo8+XyEcOH6DtUq32LYfFrKviy5MWSj2yz3zS0MNMfihtidbV3qvErFpezpMEgaHWTvTNXtuNmY/dE+fvm/of18P3DSDgyO+EqNyrRZ0TpswTZaQQLWxy4tquh/mh2Qqo1wO1rkq0mjUchF/G+WxdMeOgrgESfyJgDfOZBQIwg8vnbIdYSs3WQNNDqKuj5QGl4qJn33nRybXo46menlVSQGr0sZfpsHcV9sW8VQ9RDpDQ7luSMztlQxtjKs3Q2x2NNt7HeliG3P4X8OJX3qahd+RlgTnEtQe7vszr8kX3J7yjuU/4oQ8ahixb5zUDdoaveinL9mgOuJtoOMg7zPGu51AGAGNK0rfPfhc58+xYEs0d9lPgVodUjyEyKc6ZazwL/K/IqVZRuxdpuI56Qy8xtCOOIPMvT/l+ImN1YwMhnfBrbyhKu0s4D9OaZmYv0PtAWNTGZlFrx21x9PEQNu1Mj89xMwMj/IR5JjRCeQOZypbWf7hv8msPcbyty/t81FawhD+DRmAvOHrcYK1Lm5zJmEO10rAb1B76XoG+hfx4u/WcNGoYBEakSbqvmEFzepAg24xiqSk4miNaa64WPcf3asb6A01TaBiyBYWRZTg3ocQ2Tmj1tVlBcU5ERyXOUhUdaa0lAKDVcepEh2PC1lbF1Mt1nr966iK9xg=
-  distributions: "sdist"
+  distributions: "sdist bdist_wheel"
   on:
-    branch: master
-    # tags: true
+    tags: true

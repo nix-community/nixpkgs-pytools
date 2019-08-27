@@ -6,12 +6,15 @@ from .format import format_normalized_package_name
 
 
 def write_nix_file(content, filename, force=False):
-    mode = "w" if force else "x"
-
     directory = os.path.dirname(filename)
     if directory:
-        os.makedirs(directory, exist_ok=True)
-    with open(filename, mode) as f:
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+
+    if os.path.isfile(filename) and not force:
+        raise ValueError('file {filename} already exists'.format(filename=filename))
+
+    with open(filename, 'w') as f:
         f.write(content)
 
 
@@ -21,7 +24,7 @@ def write_nixpkgs_package(content, package_name, nixpkgs_root, force=False):
         {"default.nix", "doc", "lib", "maintainers", "README.md", "nixos", "pkgs"}
         <= set(os.listdir(nixpkgs_root))
     ):
-        raise ValueError(f"directory {nixpkgs_root} is not a nixpkgs root directory")
+        raise ValueError("directory {nixpkgs_root} is not a nixpkgs root directory".format(nixpkgs_root=nixpkgs_root))
 
     normalized_package_name = format_normalized_package_name(package_name)
     python_modules_directory = os.path.join(
@@ -32,7 +35,7 @@ def write_nixpkgs_package(content, package_name, nixpkgs_root, force=False):
         nixpkgs_root, "pkgs", "top-level", "python-packages.nix"
     )
     package_regex = "\n[ ]+([A-Za-z0-9\-_]+)\s+=\s+callPackage"
-    inserted_text = f"\n  {normalized_package_name} = callPackage ../development/python-modules/{normalized_package_name} {{ }};\n"
+    inserted_text = "\n  {normalized_package_name} = callPackage ../development/python-modules/{normalized_package_name} {{ }};\n".format(normalized_package_name=normalized_package_name)
 
     # adhoc method of getting all python packages
     normalized_package_names = {
@@ -42,7 +45,7 @@ def write_nixpkgs_package(content, package_name, nixpkgs_root, force=False):
     # check that package does not already exist
     if normalized_package_name in normalized_package_names and not force:
         raise ValueError(
-            f'cannot overrite existing package derivation {package_directory} without force "-f" option'
+            'cannot overrite existing package derivation {package_directory} without force "-f" option'.format(package_directory=package_directory)
         )
 
     # write file to pkgs/development/python-modules/<package_name>/default.nix
@@ -73,7 +76,7 @@ def write_nixpkgs_package(content, package_name, nixpkgs_root, force=False):
             normalized_package_name < python_packages_package_name
             and letter_distance <= 1
         ):
-            print(f"inserting package before {match.group(1)} in python-modules.nix")
+            print("inserting package before {package} in python-modules.nix".format(package=match.group(1)))
             insertion_location = content_offset + match.start()
 
             with open(python_packages_filename, "w") as f:

@@ -1,11 +1,13 @@
-with import <nixpkgs> {};
-python3.pkgs.buildPythonPackage {
+{ pkgs ? import <nixpkgs> { }, pythonPackages ? pkgs.python3Packages }:
+
+pythonPackages.buildPythonPackage {
   name = "env";
   src = ./.;
-  propagatedBuildInputs = with python3.pkgs;[
+
+  propagatedBuildInputs = with pythonPackages; [
     jinja2 setuptools rope
-  ];
+  ] ++ pkgs.stdenv.lib.optionals pythonPackages.isPy27 [ pythonPackages.mock ];
 
-  checkInputs = [ python3.pkgs.black python3.pkgs.pytest ];
-
+  checkInputs = [ pythonPackages.pytest ]
+    ++ pkgs.stdenv.lib.optionals pythonPackages.isPy3k [ pythonPackages.black ];
 }

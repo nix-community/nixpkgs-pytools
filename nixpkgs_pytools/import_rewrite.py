@@ -5,18 +5,21 @@ import argparse
 import tempfile
 import sys
 import os
+import shutil
 
 
 def rename_module(project, old_module, new_module):
-    with tempfile.TemporaryDirectory() as tempdir:
-        os.makedirs(os.path.join(tempdir, old_module), exist_ok=True)
+    try:
+        tempdir = tempfile.mkdtemp()
+        os.makedirs(os.path.join(tempdir, old_module))
         open(os.path.join(tempdir, old_module, '__init__.py'), 'a').close()
         sys.path.append(tempdir)
 
         resource = project.find_module(old_module)
         changes = Rename(project, resource).get_changes(new_module)
         changes.do()
-
+    finally:
+        shutil.rmtree(tempdir, ignore_errors=True)
 
 def rename_modules(project_path, module_mapper):
     project = Project(project_path, ropefolder=None)

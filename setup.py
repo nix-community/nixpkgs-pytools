@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="nixpkgs-pytools",
     description="Tools for removing the tedious nature of creating nixpkgs derivations",
-    version="1.2.0",
+    version="1.3.0",
     packages=["nixpkgs_pytools"],
     license="MIT",
     long_description=open("README.md").read(),
@@ -26,7 +26,8 @@ setup(
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",

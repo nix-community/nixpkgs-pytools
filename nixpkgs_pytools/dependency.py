@@ -2,9 +2,13 @@ import re
 import sys
 import os
 import tempfile
-import unittest
 import ast
 import glob
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from .download import download_package
 from .format import format_normalized_package_name
@@ -302,7 +306,7 @@ def determine_dependencies_from_mock_setup(directory):
         else:
             mock_path = "distutils.core.setup"
 
-        with unittest.mock.patch(mock_path) as mock_setup:
+        with mock.patch(mock_path) as mock_setup:
             exec(setup_contents)
 
         args, kwargs = mock_setup.call_args
@@ -310,7 +314,7 @@ def determine_dependencies_from_mock_setup(directory):
         print(
             "mocking setup.py::setup(...) failed thus dependency information is likely incomplete"
         )
-        print(f'mocking error: "{e}"')
+        print('mocking error: "{e}"'.format(e=e))
         raise e
     finally:
         sys.path = sys.path[1:]
@@ -320,9 +324,9 @@ def determine_dependencies_from_mock_setup(directory):
     for k, v in kwargs.get("extras_require", {}).items():
         if isinstance(v, list):
             for p in v:
-                extraInputs.append(f"{p} # {k}")
+                extraInputs.append("{p} # {k}".format(p=p, k=k))
         else:
-            extraInputs.append(f"{p} # {k}")
+            extraInputs.append("{p} # {k}".format(p=p, k=k))
 
     return {
         "extraInputs": extraInputs,

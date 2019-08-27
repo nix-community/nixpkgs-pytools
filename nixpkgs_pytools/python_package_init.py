@@ -1,11 +1,9 @@
-import urllib.request
 import json
 import argparse
 import subprocess
 import re
 import sys
 import os
-from unittest import mock
 from distutils.dir_util import copy_tree
 import tempfile
 import textwrap
@@ -57,7 +55,7 @@ def cli(arguments):
         help="Force creation of file, overwriting when it already exists",
     )
     args = parser.parse_args()
-    print(f'Fetching package="{args.package}" version="{args.version or "stable"}"')
+    print('Fetching package="{package}" version="{version}"'.format(package=args.package, version=args.version or "stable"))
     return args
 
 
@@ -73,7 +71,7 @@ def initialize_package(
         write_nixpkgs_package(content, package_name, nixpkgs_root, force)
     else:
         write_nix_file(content, filename, force)
-        print(f'Package "{package_name}" succesfully written to "{filename}"')
+        print('Package "{package_name}" succesfully written to "{filename}"'.format(package_name=package_name, filename=filename))
 
 
 def determine_check_phase(metadata):
@@ -88,7 +86,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
     package_version = package_version or package_json["info"]["version"]
 
     if package_version not in package_json["releases"]:
-        raise ValueError(f'package version "{package_version}" does not exist on pypi')
+        raise ValueError('package version "{package_version}" does not exist on pypi'.format(package_version=package_version))
 
     package_release_json = None
     for release in package_json["releases"][package_version]:
@@ -97,7 +95,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
             break
     else:
         raise ValueError(
-            f"no source distribution (sdist) found for {package_name}:{package_version}"
+            "no source distribution (sdist) found for {package_name}:{package_version}".format(package_name=package_name, package_version=package_version)
         )
 
     metadata = {

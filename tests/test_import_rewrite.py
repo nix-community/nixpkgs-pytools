@@ -50,11 +50,12 @@ import pytest
 from nixpkgs_pytools.import_rewrite import rename_modules
 
 
-def test_module_rewrite():
-    with tempfile.TemporaryDirectory() as tempdir:
-        with open(os.path.join(tempdir, 'example.py'), 'w') as f:
-            f.write(SOURCE)
+def test_module_rewrite(tmpdir):
+    filename = str(tmpdir.join('example.py'))
 
-        rename_modules(tempdir, [('numpy', 'mynumpy')])
+    with open(filename, 'w') as f:
+        f.write(SOURCE)
 
-        assert open(os.path.join(tempdir, 'example.py')).read() == EXPECTED_SOURCE
+    rename_modules(str(tmpdir), [('numpy', 'mynumpy')])
+
+    assert open(filename).read() == EXPECTED_SOURCE

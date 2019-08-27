@@ -1,14 +1,20 @@
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
+
 import re
 import string
-import urllib.request
 
 
-def format_normalized_package_name(package_name: str) -> str:
+def format_normalized_package_name(package_name):
+    # type: (str) -> str
     """Normalize a package name"""
     return package_name.replace(".", "-").replace("_", "-").lower()
 
 
-def format_description(description: str) -> str:
+def format_description(description):
+    # type: (str) -> str
     """Normalize whitespace, remove punctuation, and capitalize first letter"""
     if len(description) == 0:
         return ""
@@ -17,20 +23,22 @@ def format_description(description: str) -> str:
     return description[0].upper() + description[1:]
 
 
-def format_homepage(homepage: str) -> str:
+def format_homepage(homepage):
+    # type: (str) -> str
     """Use https url if possible"""
     if re.match("https://", homepage):
         return homepage
 
     https_homepage = homepage.replace("http://", "https://")
     try:
-        response = urllib.request.urlopen(https_homepage)
+        response = urlopen(https_homepage)
         return https_homepage
     except:
         return ""
 
 
-def format_license(license: str) -> str:
+def format_license(license):
+    # type: (str) -> str
     """Convert python setup.py license to nix license
 
     These licenses account for about 95% of all licenses. The

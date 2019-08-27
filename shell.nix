@@ -3,7 +3,7 @@ python3.pkgs.buildPythonPackage {
   name = "env";
   src = ./.;
   propagatedBuildInputs = with python3.pkgs;[
-    jinja2 setuptools
+    jinja2 setuptools rope
   ];
 
   checkInputs = [ python3.pkgs.black python3.pkgs.pytest ];

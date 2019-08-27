@@ -11,11 +11,12 @@ setup(
     author="Christopher Ostrouchov",
     author_email="chris.ostrouchov@gmail.com",
     url="https://github.com/nix-community/nixpkgs-pytools/",
-    install_requires=["jinja2", "setuptools"],
+    install_requires=["jinja2", "setuptools", "rope"],
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "python-package-init = nixpkgs_pytools.python_package_init:main"
+            "python-package-init = nixpkgs_pytools.python_package_init:main",
+            "python-rewrite-imports = nixpkgs_pytools.import_rewrite:main"
         ]
     },
     classifiers=[

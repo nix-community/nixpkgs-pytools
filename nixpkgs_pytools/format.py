@@ -126,4 +126,4 @@ def format_license(license):
         name.lower(): nix_attr
         for name, nix_attr in case_sensitive_license_nix_map.items()
     }
-    return license_nix_map.get(license.lower(), license)
+    return license_nix_map.get(license.lower())

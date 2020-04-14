@@ -101,6 +101,10 @@ def package_json_to_metadata(package_json, package_name, package_version):
             "no source distribution (sdist) found for {package_name}:{package_version}".format(package_name=package_name, package_version=package_version)
         )
 
+    try:
+        lic = format_license(package_json["info"]["license"])
+    except:
+        lic = None
     metadata = {
         "pname": format_normalized_package_name(package_json["info"]["name"]),
         "downloadname": package_json["info"]["name"],
@@ -116,7 +120,8 @@ def package_json_to_metadata(package_json, package_name, package_version):
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),
         "maintainer": getuser(),
-        "license": format_license(package_json["info"]["license"]),
+        "resolved_license": lic,
+        "license": package_json["info"]["license"],
     }
 
     metadata.update(determine_package_dependencies(package_json, metadata["url"]))
@@ -192,7 +197,7 @@ def metadata_to_nix(metadata):
           meta = with lib; {
             description = "{{ metadata.description }}";
             homepage = "{{ metadata.homepage }}";
-            license = licenses.{{ metadata.license }};
+{% if metadata.resolved_license %}            license = licenses.{{ metadata.resolved_license }};{% else %}            # license = licenses."{{ metadata.license }}"; # unable to map license to nix license format{% endif %}
             # maintainers = [ maintainers.{{ metadata.maintainer }} ];
           };
         }

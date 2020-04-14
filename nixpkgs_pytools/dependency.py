@@ -4,6 +4,9 @@ import os
 import tempfile
 import ast
 import glob
+import logging
+
+log = logging.getLogger('dependencies')
 
 try:
     from unittest import mock
@@ -269,6 +272,7 @@ def determine_package_dependencies(package_json, url):
 
             dependencies = determine_dependencies_from_mock_setup(package_directory)
     except Exception as e:
+        log.info("unable to determine package depenencies via unpacking setup.py, using pypi api instead")
         dependencies = {
             "extraInputs": [],
             "buildInputs": [],

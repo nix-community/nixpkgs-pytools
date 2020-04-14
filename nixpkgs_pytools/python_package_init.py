@@ -43,6 +43,7 @@ def cli(arguments):
         "--version", help="pypi package version (stable if not specified)"
     )
     parser.add_argument(
+        "-o",
         "--filename", default="default.nix", help="filename for nix derivation"
     )
     parser.add_argument(

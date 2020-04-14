@@ -294,6 +294,8 @@ def determine_package_dependencies(package_json, url):
 
     return sanitize_dependencies(dependencies)
 
+def ensure_list(e):
+    return e if type(e) == list else [e]
 
 def determine_dependencies_from_mock_setup(directory):
     try:
@@ -331,12 +333,11 @@ def determine_dependencies_from_mock_setup(directory):
                 extraInputs.append("{p} # {k}".format(p=p, k=k))
         else:
             extraInputs.append("{p} # {k}".format(p=p, k=k))
-
     return {
         "extraInputs": extraInputs,
-        "buildInputs": kwargs.get("setup_requires", []),
-        "checkInputs": kwargs.get("tests_require", []),
-        "propagatedBuildInputs": kwargs.get("install_requires", []),
+        "buildInputs": ensure_list(kwargs.get("setup_requires", [])),
+        "checkInputs": ensure_list(kwargs.get("tests_require", [])),
+        "propagatedBuildInputs": ensure_list(kwargs.get("install_requires", [])),
     }
 
 

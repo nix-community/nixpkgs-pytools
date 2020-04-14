@@ -44,8 +44,8 @@ def cli(arguments):
     )
     parser.add_argument(
         "-o",
-        "--out",
-        "--filename", default="default.nix", help="filename for nix derivation"
+        "--filename",
+        "--out", default="default.nix", help="filename for nix derivation"
     )
     parser.add_argument(
         "--stdout", action="store_true", help="Print the nix derivation to stdout"

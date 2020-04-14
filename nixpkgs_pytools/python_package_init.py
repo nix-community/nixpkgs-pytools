@@ -189,7 +189,7 @@ def metadata_to_nix(metadata):
         {% endif %}
           meta = with lib; {
             description = "{{ metadata.description }}";
-            homepage = {{ metadata.homepage }};
+            homepage = "{{ metadata.homepage }}";
             license = licenses.{{ metadata.license }};
             # maintainers = [ maintainers.{{ metadata.maintainer }} ];
           };

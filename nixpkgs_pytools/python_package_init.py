@@ -8,6 +8,7 @@ from distutils.dir_util import copy_tree
 import tempfile
 import textwrap
 from string import punctuation
+from getpass import getuser
 
 import jinja2
 
@@ -112,6 +113,7 @@ def package_json_to_metadata(package_json, package_name, package_version):
         ),
         "description": format_description(package_json["info"]["summary"]),
         "homepage": format_homepage(package_json["info"]["home_page"]),
+        "maintainer": getuser(),
         "license": format_license(package_json["info"]["license"]),
     }
 
@@ -189,7 +191,7 @@ def metadata_to_nix(metadata):
             description = "{{ metadata.description }}";
             homepage = {{ metadata.homepage }};
             license = licenses.{{ metadata.license }};
-            # maintainers = [ maintainers. ];
+            # maintainers = [ maintainers.{{ metadata.maintainer }} ];
           };
         }
     """

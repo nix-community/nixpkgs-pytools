@@ -16,7 +16,8 @@ setup(
     entry_points={
         "console_scripts": [
             "python-package-init = nixpkgs_pytools.python_package_init:main",
-            "python-rewrite-imports = nixpkgs_pytools.import_rewrite:main"
+            "python-rewrite-imports = nixpkgs_pytools.import_rewrite:main",
+            "python-prefix-modules = nixpkgs_pytools.prefix_modules:main",
         ]
     },
     classifiers=[

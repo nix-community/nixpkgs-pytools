@@ -50,7 +50,7 @@ def format_license(license):
        import json
        from collections import defaultdict
 
-       projects = {r['project'] for r in requests.get("https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.json").json()['rows']}
+       projects = {r['project'] for r in requests.get("https://hugovk.github.io/top-pypi-packages/top-pypi-packages.json").json()['rows']}
        licenses = defaultdict(lambda:0)
        for p in projects:
            try:

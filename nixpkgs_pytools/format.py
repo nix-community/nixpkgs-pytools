@@ -26,6 +26,8 @@ def format_description(description):
 def format_homepage(homepage):
     # type: (str) -> str
     """Use https url if possible"""
+    if homepage is None:
+        return ""
     if re.match("https://", homepage):
         return homepage
 
